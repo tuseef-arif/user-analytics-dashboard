@@ -1,9 +1,26 @@
+# Python
 .venv/
 __pycache__/
 *.py[cod]
-.env
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-.next/
+
+# Node
 node_modules/
+.next/
+
+# Env (.env.example is intentionally tracked)
+.env
+.env.*.local
+
+# Vercel
+.vercel/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
