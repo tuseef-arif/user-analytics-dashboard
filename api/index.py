@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from api.routes import auth
+from api.routes import auth, dashboard
 
 # Docs live under /api because Vercel routes only /api/* to this function.
 app = FastAPI(
@@ -10,3 +10,4 @@ app = FastAPI(
 )
 
 app.include_router(auth.router, prefix="/api/auth")
+app.include_router(dashboard.router, prefix="/api/dashboard")
