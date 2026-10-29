@@ -68,6 +68,11 @@ src/                    # Next.js frontend
     ├── constants.ts    # Session cookie name (matches the backend)
     ├── auth-guard.ts   # Pure redirect rules used by the proxy
     └── auth-guard.test.ts
+e2e/                    # Playwright end-to-end tests (see End-to-end tests)
+├── start-backend.mjs   # Starts FastAPI on a fresh throwaway SQLite database
+├── helpers.ts          # Unique usernames, sign-up/login and dashboard readers
+└── auth-dashboard.e2e.ts
+playwright.config.ts    # Playwright config: Chromium, backend :8100, frontend :3100
 .husky/                 # Git hooks: pre-commit, pre-push
 package.json            # Frontend dependencies and npm scripts
 next.config.ts          # Dev-only /api proxy to the FastAPI server
@@ -299,6 +304,7 @@ browser, so never give backend secrets that prefix.
 | `npm run format`       | Format files with Prettier                   |
 | `npm run format:check` | Check formatting without changing files      |
 | `npm test`             | Run frontend unit tests (Vitest, no network) |
+| `npm run test:e2e`     | Run Playwright end-to-end tests (see below)  |
 
 ### Git hooks
 
@@ -306,7 +312,8 @@ Installed automatically by `npm install` (Husky):
 
 - **pre-commit:** runs lint-staged (ESLint and Prettier on staged files).
 - **pre-push:** runs lint, type-check, test and build in order and stops the push at the first
-  failure.
+  failure. End-to-end tests are intentionally not part of it: they need a browser and take
+  much longer.
 
 ### Pages
 
@@ -327,10 +334,33 @@ Redirects (done by `src/proxy.ts`):
 The frontend guard only checks that the session cookie exists; the backend verifies the JWT
 on every API call, so a forged cookie never shows any data.
 
+## End-to-end tests
+
+Playwright drives Chromium through register, login, the dashboard, logout and the route guard.
+
+1. Install the browser once:
+
+   ```bash
+   npx playwright install chromium
+   ```
+
+2. Stop any running dev servers first. The tests start their own backend on port 8100 and
+   frontend on port 3100, and Next.js allows only one dev server per project folder.
+3. Run:
+
+   ```bash
+   npm run test:e2e
+   ```
+
+The backend runs on a throwaway SQLite database (`e2e/.tmp/e2e.db`, recreated on every run)
+with its own test JWT secret, so it never touches Neon or your `.env` values. Reports are
+written to `playwright-report/`; open the latest with `npx playwright show-report`. The
+tests use `.venv`'s Python by default; set `E2E_PYTHON` to use a different one.
+
 ## Git Workflow
 
 One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-End-to-end test, Vercel deployment, live link, test account.
+Vercel deployment, live link, test account.

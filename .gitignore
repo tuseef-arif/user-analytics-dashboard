@@ -15,6 +15,12 @@ next-env.d.ts
 *.tsbuildinfo
 coverage/
 
+# Playwright e2e: reports, traces and the throwaway SQLite database
+playwright-report/
+test-results/
+e2e/.tmp/
+*.db
+
 # Env: ignore every env file (.env.prod, .env.local, ...) except the template.
 .env
 .env.*
