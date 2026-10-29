@@ -9,10 +9,16 @@ __pycache__/
 # Node
 node_modules/
 .next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+coverage/
 
-# Env (.env.example is intentionally tracked)
+# Env: ignore every env file (.env.prod, .env.local, ...) except the template.
 .env
-.env.*.local
+.env.*
+!.env.example
 
 # Vercel
 .vercel/

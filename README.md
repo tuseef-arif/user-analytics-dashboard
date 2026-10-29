@@ -4,7 +4,7 @@ A dashboard app with user registration, login, logout and a protected stats dash
 
 ## Technical Stack
 
-- **Frontend:** Next.js (App Router, TypeScript), planned and in progress
+- **Frontend:** Next.js (App Router, TypeScript), in progress (setup and API client done; pages not yet built)
 - **Backend:** FastAPI (Python) with SQLModel
 - **Database:** PostgreSQL (Neon)
 - **Authentication:** JWT stored in an HTTP-only cookie; passwords hashed with argon2
@@ -32,6 +32,24 @@ api/
     └── stats.py        # grouped user counts
 migrations/             # Alembic: env.py, script template, versions/
 alembic.ini             # Alembic config (DB URL comes from api.config, not this file)
+src/                    # Next.js frontend
+├── app/
+│   ├── layout.tsx      # Root layout and page title
+│   ├── page.tsx        # Placeholder home page
+│   └── globals.css     # Minimal CSS reset
+├── components/         # Shared UI components (empty for now)
+└── lib/
+    ├── types.ts        # Gender, User, Stats and request types (mirror the backend)
+    ├── api.ts          # The only place that calls fetch; typed API functions, ApiError
+    ├── api.test.ts     # API client tests (fetch mocked)
+    └── types.test.ts   # Guards GENDERS against drifting from the backend enum
+.husky/                 # Git hooks: pre-commit, pre-push
+package.json            # Frontend dependencies and npm scripts
+next.config.ts          # Dev-only /api proxy to the FastAPI server
+eslint.config.mjs       # ESLint flat config (Next.js core-web-vitals + TypeScript)
+.prettierrc             # Prettier options
+vitest.config.ts        # Vitest config (node environment, @ alias)
+tsconfig.json           # TypeScript strict mode, @/* -> src/*
 tests/
 ├── __init__.py
 ├── conftest.py              # Test env vars, per-test SQLite engine, session and client fixtures
@@ -53,13 +71,13 @@ tests/
 
 ## API Endpoints
 
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| POST | `/api/auth/register` | Register a user (username, password, gender) | No |
-| POST | `/api/auth/login` | Verify credentials and set the session cookie | No |
-| POST | `/api/auth/logout` | Clear the session cookie | No |
-| GET | `/api/auth/me` | Return the current user | Yes |
-| GET | `/api/dashboard/stats` | Total users and counts grouped by gender | Yes |
+| Method | Endpoint               | Description                                   | Auth |
+| :----- | :--------------------- | :-------------------------------------------- | :--- |
+| POST   | `/api/auth/register`   | Register a user (username, password, gender)  | No   |
+| POST   | `/api/auth/login`      | Verify credentials and set the session cookie | No   |
+| POST   | `/api/auth/logout`     | Clear the session cookie                      | No   |
+| GET    | `/api/auth/me`         | Return the current user                       | Yes  |
+| GET    | `/api/dashboard/stats` | Total users and counts grouped by gender      | Yes  |
 
 Interactive docs: `/api/docs`
 
@@ -68,11 +86,20 @@ Interactive docs: `/api/docs`
 **Register:** `POST /api/auth/register` returns `201 Created`
 
 ```json
-{ "username": "testuser@email.com", "password": "Password123@", "gender": "male" }
+{
+  "username": "testuser@email.com",
+  "password": "Password123@",
+  "gender": "male"
+}
 ```
 
 ```json
-{ "id": 1, "username": "testuser@email.com", "gender": "male", "created_at": "2026-10-29T12:00:00Z" }
+{
+  "id": 1,
+  "username": "testuser@email.com",
+  "gender": "male",
+  "created_at": "2026-10-29T12:00:00Z"
+}
 ```
 
 **Login:** `POST /api/auth/login` returns `200 OK` and sets an `access_token` HTTP-only cookie
@@ -82,7 +109,12 @@ Interactive docs: `/api/docs`
 ```
 
 ```json
-{ "id": 1, "username": "testuser@email.com", "gender": "male", "created_at": "2026-10-29T12:00:00Z" }
+{
+  "id": 1,
+  "username": "testuser@email.com",
+  "gender": "male",
+  "created_at": "2026-10-29T12:00:00Z"
+}
 ```
 
 Wrong username or password returns `401` with `{"detail": "Invalid username or password"}`.
@@ -204,10 +236,57 @@ pytest -q
 Tests use a temporary SQLite database per test, so no PostgreSQL is needed. The integration
 test is reported as skipped.
 
+## Frontend Setup
+
+### Prerequisites
+
+- Node.js 22.12+ for development. The app itself needs only Node 20.9+, but the test and
+  commit tooling (Vitest, lint-staged) requires 22.12+.
+
+### Install and run
+
+```bash
+npm install
+```
+
+Run the backend and the frontend in two terminals:
+
+```bash
+uvicorn api.index:app --reload --port 8000
+npm run dev
+```
+
+App: http://localhost:3000. In development, requests to `/api/*` are proxied to
+`http://127.0.0.1:8000`; set `API_PROXY_TARGET` to proxy somewhere else. Production has no
+proxy, because `/api` is served by the Python function.
+
+Next.js also loads the root `.env`. Only variables prefixed with `NEXT_PUBLIC_` reach the
+browser, so never give backend secrets that prefix.
+
+### Scripts
+
+| Script                 | What it does                                 |
+| :--------------------- | :------------------------------------------- |
+| `npm run dev`          | Start the Next.js dev server                 |
+| `npm run build`        | Production build                             |
+| `npm run lint`         | ESLint                                       |
+| `npm run type-check`   | TypeScript check (`tsc --noEmit`)            |
+| `npm run format`       | Format files with Prettier                   |
+| `npm run format:check` | Check formatting without changing files      |
+| `npm test`             | Run frontend unit tests (Vitest, no network) |
+
+### Git hooks
+
+Installed automatically by `npm install` (Husky):
+
+- **pre-commit:** runs lint-staged (ESLint and Prettier on staged files).
+- **pre-push:** runs lint, type-check, test and build in order and stops the push at the first
+  failure.
+
 ## Git Workflow
 
 One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-Frontend, Vercel deployment, live link, test account.
+Pages (register, login, dashboard), Vercel deployment, live link, test account.

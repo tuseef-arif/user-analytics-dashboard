@@ -1,0 +1,9 @@
+# Prettier formatting options, used by `npm run format`, `npm run format:check`
+# and the pre-commit hook. Everything not listed uses Prettier's defaults.
+
+# Single quotes in JS/TS instead of Prettier's default double quotes.
+singleQuote: true
+
+# Keep each file's existing line endings. With Git's core.autocrlf=true, Windows
+# checkouts are CRLF; the default ("lf") would fail format:check on every file.
+endOfLine: auto
