@@ -1,7 +1,12 @@
-import { GENDERS } from '@/lib/types';
+import { GENDERS, type LoginInput } from '@/lib/types';
 
 export type RegisterField = 'username' | 'password' | 'gender';
 export type RegisterErrors = Partial<Record<RegisterField, string>>;
+export type LoginField = 'username' | 'password';
+export type LoginErrors = Partial<Record<LoginField, string>>;
+
+const USERNAME_REQUIRED = 'Username is required.';
+const PASSWORD_REQUIRED = 'Password is required.';
 
 export interface RegisterValues {
   username: string;
@@ -20,7 +25,7 @@ export function validateRegister(input: RegisterValues): RegisterErrors {
 
   const username = input.username.trim();
   if (!username) {
-    errors.username = 'Username is required.';
+    errors.username = USERNAME_REQUIRED;
   } else if (length(username) < 3 || length(username) > 64) {
     errors.username = 'Username must be 3-64 characters.';
   }
@@ -28,7 +33,7 @@ export function validateRegister(input: RegisterValues): RegisterErrors {
   // Not trimmed: spaces are legal password characters.
   const { password } = input;
   if (!password) {
-    errors.password = 'Password is required.';
+    errors.password = PASSWORD_REQUIRED;
   } else if (length(password) < 8 || length(password) > 128) {
     errors.password = 'Password must be 8-128 characters.';
   }
@@ -37,5 +42,15 @@ export function validateRegister(input: RegisterValues): RegisterErrors {
     errors.gender = 'Please select a gender.';
   }
 
+  return errors;
+}
+
+// Presence only: the backend sets no length rules on login, and the form must not
+// reveal the registration password policy.
+export function validateLogin(input: LoginInput): LoginErrors {
+  const errors: LoginErrors = {};
+  if (!input.username.trim()) errors.username = USERNAME_REQUIRED;
+  // Not trimmed: spaces are legal password characters.
+  if (!input.password) errors.password = PASSWORD_REQUIRED;
   return errors;
 }
