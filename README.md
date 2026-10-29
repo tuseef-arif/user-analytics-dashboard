@@ -4,7 +4,7 @@ A dashboard app with user registration, login, logout and a protected stats dash
 
 ## Technical Stack
 
-- **Frontend:** Next.js (App Router, TypeScript), in progress (setup and API client done; pages not yet built)
+- **Frontend:** Next.js (App Router, TypeScript), in progress (register page done; login and dashboard pending)
 - **Backend:** FastAPI (Python) with SQLModel
 - **Database:** PostgreSQL (Neon)
 - **Authentication:** JWT stored in an HTTP-only cookie; passwords hashed with argon2
@@ -35,20 +35,30 @@ alembic.ini             # Alembic config (DB URL comes from api.config, not this
 src/                    # Next.js frontend
 ├── app/
 │   ├── layout.tsx      # Root layout and page title
-│   ├── page.tsx        # Placeholder home page
-│   └── globals.css     # Minimal CSS reset
-├── components/         # Shared UI components (empty for now)
+│   ├── page.tsx        # Placeholder home page with a link to /register
+│   ├── globals.css     # Minimal CSS reset
+│   └── register/
+│       ├── page.tsx    # /register: page title and RegisterForm
+│       └── page.module.css
+├── components/
+│   ├── FormField.tsx   # Label + control + accessible error message (shared by forms)
+│   ├── FormField.module.css
+│   ├── RegisterForm.tsx         # Register form: validation, submit, server errors
+│   ├── RegisterForm.module.css
+│   └── RegisterForm.test.tsx    # Form tests (jsdom, API and router mocked)
 └── lib/
     ├── types.ts        # Gender, User, Stats and request types (mirror the backend)
     ├── api.ts          # The only place that calls fetch; typed API functions, ApiError
     ├── api.test.ts     # API client tests (fetch mocked)
-    └── types.test.ts   # Guards GENDERS against drifting from the backend enum
+    ├── types.test.ts   # Guards GENDERS against drifting from the backend enum
+    ├── validation.ts   # Client-side register validation (mirrors backend limits)
+    └── validation.test.ts
 .husky/                 # Git hooks: pre-commit, pre-push
 package.json            # Frontend dependencies and npm scripts
 next.config.ts          # Dev-only /api proxy to the FastAPI server
 eslint.config.mjs       # ESLint flat config (Next.js core-web-vitals + TypeScript)
 .prettierrc             # Prettier options
-vitest.config.ts        # Vitest config (node environment, @ alias)
+vitest.config.ts        # Vitest config (node by default, jsdom per component test, @ alias)
 tsconfig.json           # TypeScript strict mode, @/* -> src/*
 tests/
 ├── __init__.py
@@ -283,10 +293,17 @@ Installed automatically by `npm install` (Husky):
 - **pre-push:** runs lint, type-check, test and build in order and stops the push at the first
   failure.
 
+### Pages
+
+| Path        | Status      | Notes                                                                  |
+| :---------- | :---------- | :--------------------------------------------------------------------- |
+| `/register` | Implemented | Validates input, then redirects to `/login?registered=1` on success    |
+| `/login`    | Not yet     | The register redirect target; added in a later branch (404 until then) |
+
 ## Git Workflow
 
 One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-Pages (register, login, dashboard), Vercel deployment, live link, test account.
+Pages (login, dashboard), Vercel deployment, live link, test account.
