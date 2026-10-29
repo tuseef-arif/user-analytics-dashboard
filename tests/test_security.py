@@ -40,7 +40,7 @@ def test_token_with_other_secret_returns_none() -> None:
     now = datetime.now(UTC)
     token = jwt.encode(
         {"sub": "1", "iat": now, "exp": now + timedelta(minutes=5)},
-        "some-other-secret",
+        "some-other-secret-that-is-also-32-bytes",
         algorithm="HS256",
     )
     assert decode_access_token(token) is None

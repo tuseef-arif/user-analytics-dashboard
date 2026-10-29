@@ -12,6 +12,9 @@ class Gender(str, Enum):
 
 
 class User(SQLModel, table=True):
+    # "user" is reserved in PostgreSQL: unquoted `SELECT * FROM user` returns the role.
+    __tablename__ = "users"
+
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(max_length=64, unique=True, index=True)
     password_hash: str

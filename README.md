@@ -17,20 +17,27 @@ api/
 ├── index.py            # FastAPI app and router registration
 ├── config.py           # Settings loaded from env / .env (pydantic-settings)
 ├── database.py         # Lazy database engine, URL normalization, get_session dependency
-├── init_db.py          # `python -m api.init_db`: create missing tables
 ├── seed_test_user.py   # `python -m api.seed_test_user`: create the demo account
-├── models.py           # User table and Gender enum
+├── models.py           # User table ("users") and Gender enum
 ├── schemas.py          # Request/response models (RegisterIn, LoginIn, UserOut, StatsOut)
 ├── security.py         # argon2 password hashing and JWT helpers
 ├── deps.py             # get_current_user dependency and cookie name
-└── routes/
+├── routes/             # Thin HTTP layer: validate, call a service, return a response
+│   ├── __init__.py
+│   ├── auth.py         # register, login, logout, me
+│   └── dashboard.py    # stats
+└── services/           # Business logic and database queries
     ├── __init__.py
-    ├── auth.py         # register, login, logout, me
-    └── dashboard.py    # stats
+    ├── users.py        # create, authenticate and look up users
+    └── stats.py        # grouped user counts
+migrations/             # Alembic: env.py, script template, versions/
+alembic.ini             # Alembic config (DB URL comes from api.config, not this file)
 tests/
 ├── __init__.py
-├── conftest.py              # Test env vars, in-memory SQLite session and client fixtures
+├── conftest.py              # Test env vars, per-test SQLite engine, session and client fixtures
+├── alembic_helpers.py       # Run Alembic commands against a test engine
 ├── test_app.py              # Docs and OpenAPI availability
+├── test_config.py           # Settings validation (JWT secret length)
 ├── test_models.py           # User persistence and constraints
 ├── test_schemas.py          # Input validation and normalization
 ├── test_security.py         # Password hashing and token handling
@@ -39,7 +46,8 @@ tests/
 ├── test_auth_session.py     # logout, me and current-user behavior
 ├── test_dashboard_stats.py  # GET /api/dashboard/stats
 ├── test_database_url.py     # DATABASE_URL scheme normalization
-├── test_init_db.py          # Table creation and demo-account seeding
+├── test_migrations.py       # Alembic upgrade/downgrade, legacy rename, model drift
+├── test_seed_test_user.py   # Demo-account seeding
 └── test_integration_postgres.py  # Real PostgreSQL check (opt-in, see below)
 ```
 
@@ -79,6 +87,11 @@ Interactive docs: `/api/docs`
 
 Wrong username or password returns `401` with `{"detail": "Invalid username or password"}`.
 
+**Validation rules (register):** username is trimmed and lowercased, 3–64 characters, using only
+letters, digits and `. _ + @ -`; password is 8–128 characters; gender is `male`, `female` or
+`other`. Invalid input returns `422`. Login only requires non-empty fields (password at most
+128 characters), so its errors don't reveal the registration policy.
+
 **Stats:** `GET /api/dashboard/stats` (requires the cookie) returns `200 OK`
 
 ```json
@@ -104,8 +117,8 @@ JWT_SECRET="generate-a-long-random-string"
 COOKIE_SECURE="false"
 ```
 
-`COOKIE_SECURE="false"` is needed for local `http://`; keep it `true` in production. Generate a
-secret with:
+`COOKIE_SECURE="false"` is needed for local `http://`; keep it `true` in production.
+`JWT_SECRET` must be at least 32 characters or the app refuses to start. Generate one with:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(48))"
@@ -138,11 +151,14 @@ Before the first run, create the tables as described in [Database Setup (Neon)](
    COOKIE_SECURE="false"
    ```
 
-3. Create the tables (safe to rerun; existing tables and rows are left untouched):
+3. Apply the database migrations (safe to rerun; only pending migrations run):
 
    ```bash
-   python -m api.init_db
+   alembic upgrade head
    ```
+
+   A database created before migrations existed has a table named `user`; the first migration
+   renames it to `users` and keeps its rows.
 
 4. Optionally create the demo account `testuser@email.com` / `Password123@` (safe to rerun):
 
@@ -152,11 +168,22 @@ Before the first run, create the tables as described in [Database Setup (Neon)](
 
 Run these commands from the project root with the virtual environment active.
 
+### Schema changes
+
+Change the model in `api/models.py`, then generate, review and apply a migration:
+
+```bash
+alembic revision --autogenerate -m "describe the change"
+alembic upgrade head
+```
+
+`tests/test_migrations.py` fails if a model changes without a matching migration.
+
 ### Integration tests (optional)
 
 `tests/test_integration_postgres.py` runs against a real database and is skipped unless
 `TEST_DATABASE_URL` is set. Use a separate Neon branch, not your main database. The test
-creates the table if missing, inserts one uniquely named user and deletes only that row.
+applies migrations, inserts one uniquely named user and deletes only that row.
 
 ```bash
 TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require" pytest -m integration
@@ -174,8 +201,8 @@ $env:TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require";
 pytest -q
 ```
 
-Tests use an in-memory SQLite database, so no PostgreSQL is needed. The integration test is
-reported as skipped.
+Tests use a temporary SQLite database per test, so no PostgreSQL is needed. The integration
+test is reported as skipped.
 
 ## Git Workflow
 

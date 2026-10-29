@@ -7,9 +7,9 @@ from sqlalchemy.pool import NullPool
 from sqlmodel import Session, create_engine, delete
 
 from api.database import normalize_database_url
-from api.init_db import create_tables
 from api.models import Gender, User
 from api.security import hash_password
+from tests.alembic_helpers import upgrade_head
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 
@@ -24,7 +24,7 @@ def test_postgres_insert_and_unique_username() -> None:
     engine = create_engine(normalize_database_url(TEST_DATABASE_URL), poolclass=NullPool)
     username = f"itest-{uuid.uuid4().hex[:12]}"
     try:
-        create_tables(engine)
+        upgrade_head(engine)
         with Session(engine) as session:
             user = User(
                 username=username,
