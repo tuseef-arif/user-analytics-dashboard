@@ -4,7 +4,7 @@ A dashboard app with user registration, login, logout and a protected stats dash
 
 ## Technical Stack
 
-- **Frontend:** Next.js (App Router, TypeScript), in progress (register and login pages done; dashboard pending)
+- **Frontend:** Next.js (App Router, TypeScript), register, login and protected dashboard pages
 - **Backend:** FastAPI (Python) with SQLModel
 - **Database:** PostgreSQL (Neon)
 - **Authentication:** JWT stored in an HTTP-only cookie; passwords hashed with argon2
@@ -35,11 +35,17 @@ alembic.ini             # Alembic config (DB URL comes from api.config, not this
 src/                    # Next.js frontend
 ├── app/
 │   ├── layout.tsx      # Root layout and page title
-│   ├── page.tsx        # Placeholder home page with a link to /register
+│   ├── page.tsx        # / : fallback redirect to /login (the proxy handles signed-in users)
 │   ├── globals.css     # Minimal CSS reset
-│   └── register/
-│       ├── page.tsx    # /register: page title and RegisterForm
+│   ├── register/
+│   │   ├── page.tsx    # /register: page title and RegisterForm
+│   │   └── page.module.css  # Centered page layout (also used by /login)
+│   ├── login/
+│   │   └── page.tsx    # /login: reads ?registered=1 and renders LoginForm
+│   └── dashboard/
+│       ├── page.tsx    # /dashboard: renders DashboardView
 │       └── page.module.css
+├── proxy.ts            # Route guard: redirects based on session cookie presence
 ├── components/
 │   ├── FormField.tsx   # Label + control + accessible error message (shared by forms)
 │   ├── FormField.module.css
@@ -48,14 +54,20 @@ src/                    # Next.js frontend
 │   ├── RegisterForm.test.tsx    # Form tests (jsdom, API and router mocked)
 │   ├── LoginForm.tsx            # Login form: validation, submit, server errors
 │   ├── LoginForm.module.css     # Reuses RegisterForm styles via composes
-│   └── LoginForm.test.tsx
+│   ├── LoginForm.test.tsx
+│   ├── DashboardView.tsx        # Loads user and stats, gender breakdown, logout
+│   ├── DashboardView.module.css
+│   └── DashboardView.test.tsx
 └── lib/
     ├── types.ts        # Gender, User, Stats and request types (mirror the backend)
     ├── api.ts          # The only place that calls fetch; typed API functions, ApiError
     ├── api.test.ts     # API client tests (fetch mocked)
     ├── types.test.ts   # Guards GENDERS against drifting from the backend enum
     ├── validation.ts   # Client-side register and login validation
-    └── validation.test.ts
+    ├── validation.test.ts
+    ├── constants.ts    # Session cookie name (matches the backend)
+    ├── auth-guard.ts   # Pure redirect rules used by the proxy
+    └── auth-guard.test.ts
 .husky/                 # Git hooks: pre-commit, pre-push
 package.json            # Frontend dependencies and npm scripts
 next.config.ts          # Dev-only /api proxy to the FastAPI server
@@ -298,10 +310,22 @@ Installed automatically by `npm install` (Husky):
 
 ### Pages
 
-| Path        | Status      | Notes                                                                          |
-| :---------- | :---------- | :----------------------------------------------------------------------------- |
-| `/register` | Implemented | Validates input, then redirects to `/login?registered=1` on success            |
-| `/login`    | Implemented | Redirects to `/dashboard` on success (added in a later branch; 404 until then) |
+| Path         | Status                 | Notes                                                               |
+| :----------- | :--------------------- | :------------------------------------------------------------------ |
+| `/register`  | Implemented            | Validates input, then redirects to `/login?registered=1` on success |
+| `/login`     | Implemented            | Redirects to `/dashboard` on success                                |
+| `/dashboard` | Implemented, protected | Signed-in user, total users, users by gender, logout                |
+
+Redirects (done by `src/proxy.ts`):
+
+| Path                       | With session cookie | Without  |
+| :------------------------- | :------------------ | :------- |
+| `/`                        | `/dashboard`        | `/login` |
+| `/dashboard` and sub-paths | stays               | `/login` |
+| `/login`, `/register`      | `/dashboard`        | stays    |
+
+The frontend guard only checks that the session cookie exists; the backend verifies the JWT
+on every API call, so a forged cookie never shows any data.
 
 ## Git Workflow
 
@@ -309,4 +333,4 @@ One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-Dashboard page, Vercel deployment, live link, test account.
+End-to-end test, Vercel deployment, live link, test account.

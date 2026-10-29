@@ -1,10 +1,6 @@
-import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
+// The proxy already sends signed-in users to /dashboard; this covers anything it misses.
 export default function Home() {
-  return (
-    <main>
-      <h1>Dashboard App</h1>
-      <Link href="/register">Create an account</Link>
-    </main>
-  );
+  redirect('/login');
 }
