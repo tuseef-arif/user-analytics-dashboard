@@ -1,0 +1,11 @@
+run_step() {
+  npm run "$1" || {
+    echo "pre-push: '$1' failed, push aborted." >&2
+    exit 1
+  }
+}
+
+run_step lint
+run_step type-check
+run_step test
+run_step build
