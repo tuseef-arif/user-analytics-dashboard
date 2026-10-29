@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateRegister } from '@/lib/validation';
+import { validateLogin, validateRegister } from '@/lib/validation';
 
 const valid = {
   username: 'testuser',
@@ -94,5 +94,49 @@ it('reports every invalid field at once', () => {
     username: 'Username is required.',
     password: 'Password is required.',
     gender: 'Please select a gender.',
+  });
+});
+
+describe('validateLogin', () => {
+  const login = { username: 'testuser', password: 'Password123@' };
+
+  it.each(['', '   '])('requires a username (%j)', (username) => {
+    expect(validateLogin({ ...login, username })).toEqual({
+      username: 'Username is required.',
+    });
+  });
+
+  it('requires a password', () => {
+    expect(validateLogin({ ...login, password: '' })).toEqual({
+      password: 'Password is required.',
+    });
+  });
+
+  it('does not trim the password: only spaces is non-empty', () => {
+    expect(validateLogin({ ...login, password: '   ' })).toEqual({});
+  });
+
+  it('has no length rules', () => {
+    expect(validateLogin({ username: 'a', password: 'b' })).toEqual({});
+  });
+
+  it('accepts the sample account', () => {
+    expect(
+      validateLogin({
+        username: 'testuser@email.com',
+        password: 'Password123@',
+      }),
+    ).toEqual({});
+  });
+
+  it('returns {} for a valid input', () => {
+    expect(validateLogin(login)).toEqual({});
+  });
+
+  it('reports both fields at once', () => {
+    expect(validateLogin({ username: '', password: '' })).toEqual({
+      username: 'Username is required.',
+      password: 'Password is required.',
+    });
   });
 });

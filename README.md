@@ -4,7 +4,7 @@ A dashboard app with user registration, login, logout and a protected stats dash
 
 ## Technical Stack
 
-- **Frontend:** Next.js (App Router, TypeScript), in progress (register page done; login and dashboard pending)
+- **Frontend:** Next.js (App Router, TypeScript), in progress (register and login pages done; dashboard pending)
 - **Backend:** FastAPI (Python) with SQLModel
 - **Database:** PostgreSQL (Neon)
 - **Authentication:** JWT stored in an HTTP-only cookie; passwords hashed with argon2
@@ -45,13 +45,16 @@ src/                    # Next.js frontend
 │   ├── FormField.module.css
 │   ├── RegisterForm.tsx         # Register form: validation, submit, server errors
 │   ├── RegisterForm.module.css
-│   └── RegisterForm.test.tsx    # Form tests (jsdom, API and router mocked)
+│   ├── RegisterForm.test.tsx    # Form tests (jsdom, API and router mocked)
+│   ├── LoginForm.tsx            # Login form: validation, submit, server errors
+│   ├── LoginForm.module.css     # Reuses RegisterForm styles via composes
+│   └── LoginForm.test.tsx
 └── lib/
     ├── types.ts        # Gender, User, Stats and request types (mirror the backend)
     ├── api.ts          # The only place that calls fetch; typed API functions, ApiError
     ├── api.test.ts     # API client tests (fetch mocked)
     ├── types.test.ts   # Guards GENDERS against drifting from the backend enum
-    ├── validation.ts   # Client-side register validation (mirrors backend limits)
+    ├── validation.ts   # Client-side register and login validation
     └── validation.test.ts
 .husky/                 # Git hooks: pre-commit, pre-push
 package.json            # Frontend dependencies and npm scripts
@@ -295,10 +298,10 @@ Installed automatically by `npm install` (Husky):
 
 ### Pages
 
-| Path        | Status      | Notes                                                                  |
-| :---------- | :---------- | :--------------------------------------------------------------------- |
-| `/register` | Implemented | Validates input, then redirects to `/login?registered=1` on success    |
-| `/login`    | Not yet     | The register redirect target; added in a later branch (404 until then) |
+| Path        | Status      | Notes                                                                          |
+| :---------- | :---------- | :----------------------------------------------------------------------------- |
+| `/register` | Implemented | Validates input, then redirects to `/login?registered=1` on success            |
+| `/login`    | Implemented | Redirects to `/dashboard` on success (added in a later branch; 404 until then) |
 
 ## Git Workflow
 
@@ -306,4 +309,4 @@ One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-Pages (login, dashboard), Vercel deployment, live link, test account.
+Dashboard page, Vercel deployment, live link, test account.
