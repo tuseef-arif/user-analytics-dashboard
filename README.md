@@ -16,7 +16,9 @@ api/
 ├── __init__.py
 ├── index.py            # FastAPI app and router registration
 ├── config.py           # Settings loaded from env / .env (pydantic-settings)
-├── database.py         # Lazy database engine and get_session dependency
+├── database.py         # Lazy database engine, URL normalization, get_session dependency
+├── init_db.py          # `python -m api.init_db`: create missing tables
+├── seed_test_user.py   # `python -m api.seed_test_user`: create the demo account
 ├── models.py           # User table and Gender enum
 ├── schemas.py          # Request/response models (RegisterIn, LoginIn, UserOut, StatsOut)
 ├── security.py         # argon2 password hashing and JWT helpers
@@ -35,7 +37,10 @@ tests/
 ├── test_auth_register.py    # POST /api/auth/register
 ├── test_auth_login.py       # POST /api/auth/login
 ├── test_auth_session.py     # logout, me and current-user behavior
-└── test_dashboard_stats.py  # GET /api/dashboard/stats
+├── test_dashboard_stats.py  # GET /api/dashboard/stats
+├── test_database_url.py     # DATABASE_URL scheme normalization
+├── test_init_db.py          # Table creation and demo-account seeding
+└── test_integration_postgres.py  # Real PostgreSQL check (opt-in, see below)
 ```
 
 ## API Endpoints
@@ -117,10 +122,50 @@ uvicorn api.index:app --reload --port 8000
 
 API docs: http://localhost:8000/api/docs
 
-There is no migration or setup script yet, so create the table once against your database:
+Before the first run, create the tables as described in [Database Setup (Neon)](#database-setup-neon).
+
+## Database Setup (Neon)
+
+1. Create a project at [neon.tech](https://neon.tech) and copy the **pooled** connection string
+   from the dashboard.
+2. Put it in `.env` as `DATABASE_URL`. Either form works; a plain `postgres://` or
+   `postgresql://` URL is rewritten to `postgresql+psycopg://` automatically. Keep
+   `sslmode=require` in the query string.
+
+   ```env
+   DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+   JWT_SECRET="generate-a-long-random-string"
+   COOKIE_SECURE="false"
+   ```
+
+3. Create the tables (safe to rerun; existing tables and rows are left untouched):
+
+   ```bash
+   python -m api.init_db
+   ```
+
+4. Optionally create the demo account `testuser@email.com` / `Password123@` (safe to rerun):
+
+   ```bash
+   python -m api.seed_test_user
+   ```
+
+Run these commands from the project root with the virtual environment active.
+
+### Integration tests (optional)
+
+`tests/test_integration_postgres.py` runs against a real database and is skipped unless
+`TEST_DATABASE_URL` is set. Use a separate Neon branch, not your main database. The test
+creates the table if missing, inserts one uniquely named user and deletes only that row.
 
 ```bash
-python -c "from sqlmodel import SQLModel; from api import models; from api.database import get_engine; SQLModel.metadata.create_all(get_engine())"
+TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require" pytest -m integration
+```
+
+PowerShell:
+
+```powershell
+$env:TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"; pytest -m integration
 ```
 
 ## Running Tests
@@ -129,7 +174,8 @@ python -c "from sqlmodel import SQLModel; from api import models; from api.datab
 pytest -q
 ```
 
-Tests use an in-memory SQLite database, so no PostgreSQL is needed.
+Tests use an in-memory SQLite database, so no PostgreSQL is needed. The integration test is
+reported as skipped.
 
 ## Git Workflow
 
@@ -137,4 +183,4 @@ One feature per branch, merged into `main` via pull request.
 
 ## Coming Soon
 
-Frontend, Neon setup script, Vercel deployment, live link, test account.
+Frontend, Vercel deployment, live link, test account.
