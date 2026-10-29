@@ -46,7 +46,7 @@ def _other_secret_token() -> str:
     now = datetime.now(UTC)
     return jwt.encode(
         {"sub": "1", "iat": now, "exp": now + timedelta(minutes=5)},
-        "some-other-secret",
+        "some-other-secret-that-is-also-32-bytes",
         algorithm="HS256",
     )
 
