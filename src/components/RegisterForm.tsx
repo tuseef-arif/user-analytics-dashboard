@@ -6,6 +6,7 @@ import { useRef, useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/Button';
 import { FormField, invalidProps } from '@/components/FormField';
+import { PasswordInput } from '@/components/PasswordInput';
 import { ApiError, register } from '@/lib/api';
 import { GENDERS, type Gender } from '@/lib/types';
 import {
@@ -128,11 +129,10 @@ export function RegisterForm() {
       </FormField>
 
       <FormField id="password" label="Password" error={errors.password}>
-        <input
+        <PasswordInput
           ref={passwordRef}
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           value={password}
@@ -140,7 +140,6 @@ export function RegisterForm() {
             setPassword(event.target.value);
             clearError('password');
           }}
-          className="glass-input"
           {...invalidProps('password', errors.password)}
         />
       </FormField>
@@ -177,7 +176,7 @@ export function RegisterForm() {
       )}
 
       <Button type="submit" disabled={pending} loading={pending} fullWidth>
-        {pending ? 'Creating account...' : 'Create account'}
+        {pending ? 'Creating Account...' : 'Create Account'}
       </Button>
 
       <p className="caption text-center">

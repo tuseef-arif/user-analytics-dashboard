@@ -1,5 +1,6 @@
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'ghost' | 'danger' | 'icon';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonStyleOptions {
   variant?: ButtonVariant;
@@ -23,19 +24,22 @@ const BASE = [
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'border-transparent bg-fg text-ink uppercase tracking-wider shadow-glass not-disabled:hover:bg-fg/75',
+    'border-transparent bg-fg text-ink shadow-glass not-disabled:hover:bg-fg/75',
   secondary:
     'border-accent/40 bg-accent/15 text-fg not-disabled:hover:bg-accent/5',
   ghost:
     'border-control-border bg-glass text-fg not-disabled:hover:bg-black/40',
   danger:
     'border-danger-tint/50 bg-danger-tint/15 text-fg not-disabled:hover:bg-danger-tint/5',
+  // Borderless control inside another field, e.g. the password visibility toggle.
+  icon: 'border-transparent text-fg-muted not-disabled:hover:text-fg not-disabled:hover:bg-white/10',
 };
 
 const SIZES: Record<ButtonSize, string> = {
   sm: 'h-9 px-3 text-sm',
   md: 'h-11 px-4 text-base',
   lg: 'h-12 px-6 text-base',
+  icon: 'size-10',
 };
 
 export function buttonClasses({

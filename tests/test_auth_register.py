@@ -78,6 +78,7 @@ def test_register_duplicate_rolls_back_session(
         {**VALID, "gender": "unknown"},
         {**VALID, "username": "ab"},
         {**VALID, "password": "short"},
+        {**VALID, "password": "Password123"},
         {},
     ],
     ids=[
@@ -87,6 +88,7 @@ def test_register_duplicate_rolls_back_session(
         "bad-gender",
         "short-username",
         "short-password",
+        "weak-password",
         "empty-body",
     ],
 )

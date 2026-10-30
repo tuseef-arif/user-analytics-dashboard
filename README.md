@@ -158,7 +158,8 @@ Interactive docs: `/api/docs`
 Wrong username or password returns `401` with `{"detail": "Invalid username or password"}`.
 
 **Validation rules (register):** username is trimmed and lowercased, 3–64 characters, using only
-letters, digits and `. _ + @ -`; password is 8–128 characters; gender is `male`, `female` or
+letters, digits and `. _ + @ -`; password is 8–128 characters and must include a letter, a
+number and a special character (anything other than a letter, digit or space); gender is `male`, `female` or
 `other`. Invalid input returns `422`. Login only requires non-empty fields (password at most
 128 characters), so its errors don't reveal the registration policy.
 

@@ -6,6 +6,7 @@ import { useRef, useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/Button';
 import { FormField, invalidProps } from '@/components/FormField';
+import { PasswordInput } from '@/components/PasswordInput';
 import { ApiError, login } from '@/lib/api';
 import {
   validateLogin,
@@ -120,11 +121,10 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
       </FormField>
 
       <FormField id="password" label="Password" error={errors.password}>
-        <input
+        <PasswordInput
           ref={passwordRef}
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           value={password}
@@ -132,7 +132,6 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
             setPassword(event.target.value);
             clearError('password');
           }}
-          className="glass-input"
           {...invalidProps('password', errors.password)}
         />
       </FormField>
@@ -144,7 +143,7 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
       )}
 
       <Button type="submit" disabled={pending} loading={pending} fullWidth>
-        {pending ? 'Signing in...' : 'Sign in'}
+        {pending ? 'Signing In...' : 'Sign In'}
       </Button>
 
       <p className="caption text-center">

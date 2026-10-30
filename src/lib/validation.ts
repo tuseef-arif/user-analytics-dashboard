@@ -20,6 +20,16 @@ function length(value: string): number {
   return [...value].length;
 }
 
+// Mirrors _check_password_strength in api/schemas.py. Whitespace is allowed but
+// doesn't count as the special character.
+function isStrongPassword(value: string): boolean {
+  return (
+    /\p{L}/u.test(value) &&
+    /[0-9]/.test(value) &&
+    /[^\p{L}\p{N}\s]/u.test(value)
+  );
+}
+
 export function validateRegister(input: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {};
 
@@ -38,6 +48,9 @@ export function validateRegister(input: RegisterValues): RegisterErrors {
     errors.password = 'Password must be at least 8 characters.';
   } else if (length(password) > 128) {
     errors.password = 'Password must be at most 128 characters.';
+  } else if (!isStrongPassword(password)) {
+    errors.password =
+      'Password must include a letter, a number and a special character.';
   }
 
   if (!(GENDERS as readonly string[]).includes(input.gender)) {

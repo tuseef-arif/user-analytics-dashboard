@@ -36,7 +36,7 @@ function setup(props: { registered?: boolean } = {}) {
     ue,
     username: screen.getByLabelText('Username') as HTMLInputElement,
     password: screen.getByLabelText('Password') as HTMLInputElement,
-    submit: screen.getByRole('button', { name: 'Sign in' }),
+    submit: screen.getByRole('button', { name: 'Sign In' }),
   };
 }
 
@@ -81,7 +81,9 @@ describe('rendering', () => {
 
   it('submits via POST so credentials never land in the URL before hydration', () => {
     setup();
-    const form = screen.getByRole('button').closest('form')!;
+    const form = screen
+      .getByRole('button', { name: 'Sign In' })
+      .closest('form')!;
     expect(form).toHaveAttribute('method', 'post');
     expect(form).toHaveAttribute('novalidate');
   });
@@ -185,7 +187,7 @@ describe('submitting', () => {
 
     await fields.ue.click(fields.submit);
 
-    const pendingButton = screen.getByRole('button', { name: 'Signing in...' });
+    const pendingButton = screen.getByRole('button', { name: 'Signing In...' });
     expect(pendingButton).toBeDisabled();
     await fields.ue.click(pendingButton);
     // Bypass the disabled button too, as a keyboard Enter in a field would.
@@ -215,7 +217,7 @@ describe('server errors', () => {
     expect(fields.username).toHaveValue('testuser@email.com');
     expect(fields.password).toHaveValue('');
     expect(replace).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled();
   });
 
   it('shows the network message and keeps both values', async () => {

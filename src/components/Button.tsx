@@ -30,7 +30,7 @@ export function Button({
       aria-busy={loading || undefined}
       className={`${buttonClasses({ variant, size, fullWidth })} ${className}`}
     >
-      {loading && <Spinner size={size} />}
+      {loading && <Spinner size={size === 'icon' ? 'sm' : size} />}
       {children}
     </button>
   );

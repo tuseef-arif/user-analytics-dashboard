@@ -38,7 +38,7 @@ function setup() {
     username: screen.getByLabelText('Username') as HTMLInputElement,
     password: screen.getByLabelText('Password') as HTMLInputElement,
     gender: screen.getByLabelText('Gender') as HTMLSelectElement,
-    submit: screen.getByRole('button', { name: 'Create account' }),
+    submit: screen.getByRole('button', { name: 'Create Account' }),
   };
 }
 
@@ -101,7 +101,9 @@ describe('rendering', () => {
 
   it('submits via POST so credentials never land in the URL before hydration', () => {
     setup();
-    const form = screen.getByRole('button').closest('form')!;
+    const form = screen
+      .getByRole('button', { name: 'Create Account' })
+      .closest('form')!;
     expect(form).toHaveAttribute('method', 'post');
     expect(form).toHaveAttribute('novalidate');
   });
@@ -184,7 +186,7 @@ describe('submitting', () => {
     await fields.ue.click(fields.submit);
 
     const pendingButton = screen.getByRole('button', {
-      name: 'Creating account...',
+      name: 'Creating Account...',
     });
     expect(pendingButton).toBeDisabled();
     await fields.ue.click(pendingButton);
@@ -271,7 +273,7 @@ describe('server errors', () => {
       expect(fields.password).toHaveValue('Password123@');
       expect(fields.gender).toHaveValue('male');
       expect(
-        screen.getByRole('button', { name: 'Create account' }),
+        screen.getByRole('button', { name: 'Create Account' }),
       ).toBeEnabled();
     },
   );

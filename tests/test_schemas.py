@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from api.models import Gender, User
-from api.schemas import LoginIn, RegisterIn, UserOut
+from api.schemas import PASSWORD_STRENGTH_MESSAGE, LoginIn, RegisterIn, UserOut
 
 
 def test_register_normalizes_username() -> None:
@@ -53,10 +53,31 @@ def test_register_accepts_allowed_username_chars(username: str) -> None:
 
 def test_register_password_boundaries() -> None:
     base = {"username": "testuser", "gender": "male"}
-    assert RegisterIn(**base, password="x" * 8)
-    assert RegisterIn(**base, password="x" * 128)
+    assert RegisterIn(**base, password="a1!" + "x" * 5)
+    assert RegisterIn(**base, password="a1!" + "x" * 125)
     with pytest.raises(ValidationError):
-        RegisterIn(**base, password="x" * 129)
+        RegisterIn(**base, password="a1!" + "x" * 4)
+    with pytest.raises(ValidationError):
+        RegisterIn(**base, password="a1!" + "x" * 126)
+
+
+@pytest.mark.parametrize(
+    "password",
+    ["12345678!", "Password!", "Password1", "Password 1", "        "],
+    ids=["no-letter", "no-number", "no-special", "space-is-not-special", "spaces"],
+)
+def test_register_rejects_weak_password(password: str) -> None:
+    with pytest.raises(ValidationError, match=PASSWORD_STRENGTH_MESSAGE):
+        RegisterIn(username="testuser", password=password, gender="male")
+
+
+@pytest.mark.parametrize(
+    "password",
+    ["Password123@", "pässwörd1_", "abc123\U0001f600xy", " Pass1! "],
+    ids=["sample", "unicode-letters", "emoji-is-special", "surrounding-spaces"],
+)
+def test_register_accepts_strong_password(password: str) -> None:
+    assert RegisterIn(username="testuser", password=password, gender="male")
 
 
 def test_login_normalizes_username() -> None:
