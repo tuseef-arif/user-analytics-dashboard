@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/Button';
 import { FormField, invalidProps } from '@/components/FormField';
@@ -16,6 +16,7 @@ import {
 
 const FIELDS: readonly LoginField[] = ['username', 'password'];
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
+const NOTICE_DURATION_MS = 5000;
 
 // Every ApiError message goes to the form level, so a 401 never hints which field
 // was wrong; 422 field messages are shown on their fields as well.
@@ -44,9 +45,17 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!showNotice) return;
+    const timer = setTimeout(() => setShowNotice(false), NOTICE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [showNotice]);
+
+  // The form-level alert goes on any edit, since it describes the previous attempt.
   // Only the edited field's message goes; the others stay until their own field
   // changes or the form is submitted again.
   function clearError(field: LoginField) {
+    setFormError(null);
     setErrors((current) => {
       if (!current[field]) return current;
       const next = { ...current };
