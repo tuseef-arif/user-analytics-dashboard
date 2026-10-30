@@ -1,0 +1,10 @@
+tests
+e2e
+.venv
+__pycache__
+.pytest_cache
+.husky
+*.md
+requirements-dev.txt
+pytest.ini
+.env*
