@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-import styles from './FormField.module.css';
-
 interface FormFieldProps {
   id: string;
   label: string;
@@ -22,13 +20,13 @@ export function invalidProps(id: string, error?: string) {
 
 export function FormField({ id, label, error, children }: FormFieldProps) {
   return (
-    <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-semibold">
         {label}
       </label>
       {children}
       {error && (
-        <p id={errorId(id)} role="alert" className={styles.error}>
+        <p id={errorId(id)} role="alert" className="text-danger text-sm">
           {error}
         </p>
       )}

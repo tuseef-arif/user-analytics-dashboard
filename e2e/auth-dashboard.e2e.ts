@@ -27,7 +27,7 @@ test.describe('logged out', () => {
     ).toBeVisible();
     await page.goto('/register');
     await expect(
-      page.getByRole('heading', { name: 'Create your account', level: 1 }),
+      page.getByRole('heading', { name: 'Sign up', level: 1 }),
     ).toBeVisible();
   });
 

@@ -4,7 +4,8 @@ A dashboard app with user registration, login, logout and a protected stats dash
 
 ## Technical Stack
 
-- **Frontend:** Next.js (App Router, TypeScript), register, login and protected dashboard pages
+- **Frontend:** Next.js (App Router, TypeScript) with Tailwind CSS v4 and a glassmorphism
+  theme; register, login and protected dashboard pages
 - **Backend:** FastAPI (Python) with SQLModel
 - **Database:** PostgreSQL (Neon)
 - **Authentication:** JWT stored in an HTTP-only cookie; passwords hashed with argon2
@@ -34,29 +35,35 @@ migrations/             # Alembic: env.py, script template, versions/
 alembic.ini             # Alembic config (DB URL comes from api.config, not this file)
 src/                    # Next.js frontend
 ├── app/
-│   ├── layout.tsx      # Root layout and page title
+│   ├── layout.tsx      # Root layout: black background with the WaveMesh ribbons
 │   ├── page.tsx        # / : fallback redirect to /login (the proxy handles signed-in users)
-│   ├── globals.css     # Minimal CSS reset
+│   ├── globals.css     # Tailwind import, @theme design tokens, base and component classes
+│   ├── error.tsx       # Error boundary with "Try again"
+│   ├── not-found.tsx   # 404 page with a link to the dashboard
 │   ├── register/
-│   │   ├── page.tsx    # /register: page title and RegisterForm
-│   │   └── page.module.css  # Centered page layout (also used by /login)
+│   │   └── page.tsx    # /register: page title and RegisterForm
 │   ├── login/
 │   │   └── page.tsx    # /login: reads ?registered=1 and renders LoginForm
 │   └── dashboard/
 │       ├── page.tsx    # /dashboard: renders DashboardView
-│       └── page.module.css
+│       └── loading.tsx # Route-level skeleton while the page loads
 ├── proxy.ts            # Route guard: redirects based on session cookie presence
 ├── components/
+│   ├── GlassCard.tsx            # Frosted glass surface used by every card
+│   ├── AuthCard.tsx             # /login and /register card: title, welcome line, entrance animation
+│   ├── Button.tsx               # The only button: variants, sizes, loading spinner
+│   ├── ButtonLink.tsx           # Link styled as a Button
+│   ├── button-styles.ts         # Shared variant/size classes for Button and ButtonLink
+│   ├── Spinner.tsx              # Decorative loading ring
+│   ├── Skeleton.tsx             # Decorative loading placeholder
+│   ├── DashboardSkeleton.tsx    # Dashboard-shaped skeleton (view and loading.tsx)
+│   ├── WaveMesh.tsx             # Decorative neon ribbon background (inline SVG)
 │   ├── FormField.tsx   # Label + control + accessible error message (shared by forms)
-│   ├── FormField.module.css
 │   ├── RegisterForm.tsx         # Register form: validation, submit, server errors
-│   ├── RegisterForm.module.css
 │   ├── RegisterForm.test.tsx    # Form tests (jsdom, API and router mocked)
 │   ├── LoginForm.tsx            # Login form: validation, submit, server errors
-│   ├── LoginForm.module.css     # Reuses RegisterForm styles via composes
 │   ├── LoginForm.test.tsx
 │   ├── DashboardView.tsx        # Loads user and stats, gender breakdown, logout
-│   ├── DashboardView.module.css
 │   └── DashboardView.test.tsx
 └── lib/
     ├── types.ts        # Gender, User, Stats and request types (mirror the backend)
@@ -76,6 +83,7 @@ playwright.config.ts    # Playwright config: Chromium, backend :8100, frontend :
 .husky/                 # Git hooks: pre-commit, pre-push
 package.json            # Frontend dependencies and npm scripts
 next.config.ts          # Dev-only /api proxy to the FastAPI server
+postcss.config.mjs      # Tailwind CSS v4 PostCSS plugin
 eslint.config.mjs       # ESLint flat config (Next.js core-web-vitals + TypeScript)
 .prettierrc             # Prettier options
 vitest.config.ts        # Vitest config (node by default, jsdom per component test, @ alias)
@@ -356,6 +364,13 @@ The backend runs on a throwaway SQLite database (`e2e/.tmp/e2e.db`, recreated on
 with its own test JWT secret, so it never touches Neon or your `.env` values. Reports are
 written to `playwright-report/`; open the latest with `npx playwright show-report`. The
 tests use `.venv`'s Python by default; set `E2E_PYTHON` to use a different one.
+
+## Styling
+
+Styling uses Tailwind CSS v4 (no CSS Modules). Design tokens (colors, radii, shadow, motion)
+live in the `@theme` block in `src/app/globals.css`, next to a few shared classes
+(`.glass`, `.glass-input`, `.link`, `.banner-error`, `.banner-success`). Use `Button`,
+`ButtonLink`, `Spinner`, `Skeleton` and `GlassCard` instead of one-off styles.
 
 ## Git Workflow
 

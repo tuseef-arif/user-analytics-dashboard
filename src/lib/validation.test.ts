@@ -42,10 +42,10 @@ describe('password', () => {
   });
 
   it.each([
-    [7, 'Password must be 8-128 characters.'],
+    [7, 'Password must be at least 8 characters.'],
     [8, undefined],
     [128, undefined],
-    [129, 'Password must be 8-128 characters.'],
+    [129, 'Password must be at most 128 characters.'],
   ])('length %i -> %s', (n, expected) => {
     expect(
       validateRegister({ ...valid, password: 'x'.repeat(n) }).password,
@@ -63,7 +63,7 @@ describe('password', () => {
     );
     expect(
       validateRegister({ ...valid, password: '😀'.repeat(7) }).password,
-    ).toBe('Password must be 8-128 characters.');
+    ).toBe('Password must be at least 8 characters.');
   });
 });
 

@@ -140,6 +140,21 @@ describe('client-side validation', () => {
     expect(fields.username).not.toHaveAttribute('aria-invalid');
     expect(fields.password).toHaveFocus();
   });
+
+  it('clears a field error as soon as that field changes, leaving the other', async () => {
+    const { ue, username, password, submit } = setup();
+    await ue.click(submit);
+
+    await ue.type(password, 'p');
+    expect(password).not.toHaveAttribute('aria-invalid');
+    expect(password).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText('Password is required.')).not.toBeInTheDocument();
+    expect(fieldError(username)).toHaveTextContent('Username is required.');
+
+    await ue.type(username, 'u');
+    expect(screen.queryByText('Username is required.')).not.toBeInTheDocument();
+    expect(loginMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('submitting', () => {

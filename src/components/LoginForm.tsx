@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent } from 'react';
 
+import { Button } from '@/components/Button';
 import { FormField, invalidProps } from '@/components/FormField';
 import { ApiError, login } from '@/lib/api';
 import {
@@ -11,8 +12,6 @@ import {
   type LoginErrors,
   type LoginField,
 } from '@/lib/validation';
-
-import styles from './LoginForm.module.css';
 
 const FIELDS: readonly LoginField[] = ['username', 'password'];
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
@@ -43,6 +42,17 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
   const inFlight = useRef(false);
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Only the edited field's message goes; the others stay until their own field
+  // changes or the form is submitted again.
+  function clearError(field: LoginField) {
+    setErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,10 +93,10 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
       noValidate
       method="post"
       onSubmit={handleSubmit}
-      className={styles.form}
+      className="flex flex-col gap-4"
     >
       {showNotice && (
-        <p role="status" className={styles.notice}>
+        <p role="status" className="banner-success">
           Account created. Please sign in.
         </p>
       )}
@@ -100,7 +110,11 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
           autoComplete="username"
           required
           value={username}
-          onChange={(event) => setUsername(event.target.value)}
+          onChange={(event) => {
+            setUsername(event.target.value);
+            clearError('username');
+          }}
+          className="glass-input"
           {...invalidProps('username', errors.username)}
         />
       </FormField>
@@ -114,23 +128,30 @@ export function LoginForm({ registered = false }: { registered?: boolean }) {
           autoComplete="current-password"
           required
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearError('password');
+          }}
+          className="glass-input"
           {...invalidProps('password', errors.password)}
         />
       </FormField>
 
       {formError && (
-        <p role="alert" className={styles.formError}>
+        <p role="alert" className="banner-error">
           {formError}
         </p>
       )}
 
-      <button type="submit" disabled={pending} className={styles.submit}>
+      <Button type="submit" disabled={pending} loading={pending} fullWidth>
         {pending ? 'Signing in...' : 'Sign in'}
-      </button>
+      </Button>
 
-      <p className={styles.footer}>
-        Don&apos;t have an account? <Link href="/register">Create one</Link>
+      <p className="caption text-center">
+        Don&apos;t have an account?{' '}
+        <Link href="/register" className="link">
+          Create one
+        </Link>
       </p>
     </form>
   );

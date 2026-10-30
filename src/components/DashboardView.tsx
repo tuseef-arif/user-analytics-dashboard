@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { Button } from '@/components/Button';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { GlassCard } from '@/components/GlassCard';
 import { ApiError, getMe, getStats, logout } from '@/lib/api';
 import { GENDERS, type Stats, type User } from '@/lib/types';
-
-import styles from './DashboardView.module.css';
 
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
 const LOGOUT_ERROR = 'Could not log out. Please try again.';
@@ -90,68 +91,99 @@ export function DashboardView() {
   }
 
   return (
-    <div className={styles.dashboard}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Dashboard</h1>
-        <button
+    <div className="flex flex-col gap-4">
+      <GlassCard
+        as="header"
+        className="flex flex-wrap items-center justify-between gap-4"
+      >
+        <div className="min-w-0">
+          <h1 className="heading">Dashboard</h1>
+          {state.status === 'ready' && (
+            <p className="caption mt-1 break-all">
+              Signed in as{' '}
+              <strong className="text-fg">{state.user.username}</strong>
+            </p>
+          )}
+        </div>
+        <Button
           type="button"
+          variant="ghost"
           onClick={handleLogout}
           disabled={loggingOut}
-          className={styles.logout}
+          loading={loggingOut}
         >
           {loggingOut ? 'Logging out...' : 'Log out'}
-        </button>
-      </header>
+        </Button>
+      </GlassCard>
 
       {logoutError && (
-        <p role="alert" className={styles.alert}>
+        <p role="alert" className="banner-error">
           {LOGOUT_ERROR}
         </p>
       )}
 
-      {state.status === 'loading' && <p role="status">Loading dashboard...</p>}
+      {state.status === 'loading' && (
+        <DashboardSkeleton
+          title={
+            <p role="status" className="caption mb-3">
+              Loading dashboard...
+            </p>
+          }
+        />
+      )}
 
       {state.status === 'error' && (
-        <div role="alert" className={styles.alert}>
-          <p className={styles.alertMessage}>{state.message}</p>
-          <button type="button" onClick={retry} className={styles.retry}>
+        <GlassCard
+          role="alert"
+          className="border-danger-tint/50 bg-danger-tint/15"
+        >
+          <p className="mb-4">{state.message}</p>
+          <Button type="button" variant="danger" onClick={retry}>
             Try again
-          </button>
-        </div>
+          </Button>
+        </GlassCard>
       )}
 
       {state.status === 'ready' && (
-        <>
-          <p className={styles.signedIn}>
-            Signed in as <strong>{state.user.username}</strong>
-          </p>
-
-          <section aria-labelledby="total-heading" className={styles.card}>
-            <h2 id="total-heading" className={styles.cardTitle}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <GlassCard as="section" aria-labelledby="total-heading">
+            <h2 id="total-heading" className="caption mb-3 font-medium">
               Total registered users
             </h2>
-            <p className={styles.total}>{state.stats.total}</p>
-          </section>
+            <div className="relative mx-auto grid size-40 place-items-center">
+              <span
+                aria-hidden="true"
+                className="donut absolute inset-0 rounded-full"
+              />
+              <p className="text-5xl leading-none font-bold tabular-nums">
+                {state.stats.total}
+              </p>
+            </div>
+          </GlassCard>
 
-          <section aria-labelledby="gender-heading" className={styles.card}>
-            <h2 id="gender-heading" className={styles.cardTitle}>
+          <GlassCard as="section" aria-labelledby="gender-heading">
+            <h2 id="gender-heading" className="caption mb-3 font-medium">
               Users by gender
             </h2>
-            <ul className={styles.breakdown}>
+            <ul className="flex flex-col gap-4">
               {GENDERS.map((gender) => {
                 const count = state.stats.by_gender[gender] ?? 0;
                 const percent = percentage(count, state.stats.total);
                 return (
-                  <li key={gender} className={styles.row}>
-                    <div className={styles.rowText}>
-                      <span className={styles.gender}>{gender}</span>
-                      <span>
+                  <li key={gender} className="flex flex-col gap-2">
+                    <div className="flex justify-between gap-2">
+                      {/* Values come from the API in lowercase; capitalizing is display-only. */}
+                      <span className="font-medium capitalize">{gender}</span>
+                      <span className="text-fg-muted tabular-nums">
                         {count} ({percent}%)
                       </span>
                     </div>
-                    <div className={styles.track} aria-hidden="true">
+                    <div
+                      className="h-2 overflow-hidden rounded-full bg-white/15"
+                      aria-hidden="true"
+                    >
                       <div
-                        className={styles.bar}
+                        className="from-neon-magenta via-neon-orange to-neon-yellow h-full rounded-full bg-linear-to-r transition-[width] motion-reduce:transition-none"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -159,8 +191,8 @@ export function DashboardView() {
                 );
               })}
             </ul>
-          </section>
-        </>
+          </GlassCard>
+        </div>
       )}
     </div>
   );

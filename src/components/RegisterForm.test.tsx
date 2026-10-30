@@ -137,6 +137,25 @@ describe('client-side validation', () => {
     expect(fields.username).not.toHaveAttribute('aria-invalid');
     expect(fields.password).toHaveFocus();
   });
+
+  it('clears a field error as soon as that field changes, leaving the others', async () => {
+    const { ue, username, password, gender, submit } = setup();
+    await ue.click(submit);
+
+    await ue.type(username, 'a');
+    expect(username).not.toHaveAttribute('aria-invalid');
+    expect(username).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText('Username is required.')).not.toBeInTheDocument();
+    expect(fieldError(password)).toHaveTextContent('Password is required.');
+
+    await ue.selectOptions(gender, 'female');
+    expect(gender).not.toHaveAttribute('aria-invalid');
+    expect(
+      screen.queryByText('Please select a gender.'),
+    ).not.toBeInTheDocument();
+    expect(password).toHaveAttribute('aria-invalid', 'true');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('submitting', () => {
@@ -192,6 +211,21 @@ describe('server errors', () => {
     );
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it('clears a server field error once the field is edited', async () => {
+    registerMock.mockRejectedValue(new ApiError(409, 'Username already taken'));
+    const fields = setup();
+    await fillValid(fields.ue, fields);
+    await fields.ue.click(fields.submit);
+    expect(fields.username).toHaveAttribute('aria-invalid', 'true');
+
+    await fields.ue.type(fields.username, 'x');
+
+    expect(fields.username).not.toHaveAttribute('aria-invalid');
+    expect(
+      screen.queryByText('Username already taken'),
+    ).not.toBeInTheDocument();
   });
 
   it('maps 422 fieldErrors onto the matching fields', async () => {

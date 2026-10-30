@@ -34,8 +34,10 @@ export function validateRegister(input: RegisterValues): RegisterErrors {
   const { password } = input;
   if (!password) {
     errors.password = PASSWORD_REQUIRED;
-  } else if (length(password) < 8 || length(password) > 128) {
-    errors.password = 'Password must be 8-128 characters.';
+  } else if (length(password) < 8) {
+    errors.password = 'Password must be at least 8 characters.';
+  } else if (length(password) > 128) {
+    errors.password = 'Password must be at most 128 characters.';
   }
 
   if (!(GENDERS as readonly string[]).includes(input.gender)) {

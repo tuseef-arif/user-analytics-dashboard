@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 
+import { AuthCard } from '@/components/AuthCard';
 import { RegisterForm } from '@/components/RegisterForm';
-
-import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'Register | Dashboard App',
@@ -10,9 +9,8 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className={styles.main}>
-      <h1 className={styles.title}>Create your account</h1>
+    <AuthCard title="Sign up">
       <RegisterForm />
-    </main>
+    </AuthCard>
   );
 }
