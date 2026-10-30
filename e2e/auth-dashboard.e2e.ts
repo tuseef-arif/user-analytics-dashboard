@@ -27,7 +27,7 @@ test.describe('logged out', () => {
     ).toBeVisible();
     await page.goto('/register');
     await expect(
-      page.getByRole('heading', { name: 'Create your account', level: 1 }),
+      page.getByRole('heading', { name: 'Sign up', level: 1 }),
     ).toBeVisible();
   });
 
@@ -41,9 +41,9 @@ test.describe('register', () => {
   test('a new account lands on /login with a notice', async ({ page }) => {
     await page.goto('/register');
     await page.getByLabel('Username').fill(uniqueUsername());
-    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Gender').selectOption('other');
-    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.getByRole('button', { name: 'Create Account' }).click();
 
     await expect(page).toHaveURL('/login?registered=1');
     await expect(page.getByRole('status')).toHaveText(
@@ -62,7 +62,7 @@ test.describe('register', () => {
     });
     await page.goto('/register');
 
-    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.getByRole('button', { name: 'Create Account' }).click();
 
     await expect(page.getByText('Username is required.')).toBeVisible();
     await expect(page.getByText('Password is required.')).toBeVisible();
@@ -84,9 +84,9 @@ test.describe('register', () => {
     await page.goto('/register');
 
     await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Gender').selectOption('male');
-    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.getByRole('button', { name: 'Create Account' }).click();
 
     const usernameInput = page.getByLabel('Username');
     await expect(usernameInput).toHaveAttribute('aria-invalid', 'true');
@@ -111,8 +111,8 @@ test.describe('login failures', () => {
     ]) {
       await page.goto('/login');
       await page.getByLabel('Username').fill(name);
-      await page.getByLabel('Password').fill(password);
-      await page.getByRole('button', { name: 'Sign in' }).click();
+      await page.getByLabel('Password', { exact: true }).fill(password);
+      await page.getByRole('button', { name: 'Sign In' }).click();
 
       // Scoped to main: Next.js adds its own empty role="alert" route announcer.
       await expect(page.getByRole('main').getByRole('alert')).toHaveText(
@@ -131,14 +131,14 @@ test.describe('signed in', () => {
     const username = uniqueUsername();
     await page.goto('/register');
     await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Gender').selectOption('male');
-    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.getByRole('button', { name: 'Create Account' }).click();
     await expect(page).toHaveURL('/login?registered=1');
 
     await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign In' }).click();
 
     await expect(page).toHaveURL('/dashboard');
     await expect(

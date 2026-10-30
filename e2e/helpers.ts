@@ -22,8 +22,8 @@ export async function registerViaApi(
 export async function logIn(page: Page, username: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign In' }).click();
   await expect(page).toHaveURL('/dashboard');
   await expect(page.getByText('Signed in as')).toBeVisible();
 }

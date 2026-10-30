@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent } from 'react';
 
+import { Button } from '@/components/Button';
 import { FormField, invalidProps } from '@/components/FormField';
+import { PasswordInput } from '@/components/PasswordInput';
 import { ApiError, register } from '@/lib/api';
 import { GENDERS, type Gender } from '@/lib/types';
 import {
@@ -12,8 +14,6 @@ import {
   type RegisterErrors,
   type RegisterField,
 } from '@/lib/validation';
-
-import styles from './RegisterForm.module.css';
 
 const FIELDS: readonly RegisterField[] = ['username', 'password', 'gender'];
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
@@ -53,6 +53,17 @@ export function RegisterForm() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const genderRef = useRef<HTMLSelectElement>(null);
+
+  // Only the edited field's message goes; the others stay until their own field
+  // changes or the form is submitted again.
+  function clearError(field: RegisterField) {
+    setErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,7 +108,7 @@ export function RegisterForm() {
       noValidate
       method="post"
       onSubmit={handleSubmit}
-      className={styles.form}
+      className="flex flex-col gap-4"
     >
       <FormField id="username" label="Username" error={errors.username}>
         <input
@@ -108,21 +119,27 @@ export function RegisterForm() {
           autoComplete="username"
           required
           value={username}
-          onChange={(event) => setUsername(event.target.value)}
+          onChange={(event) => {
+            setUsername(event.target.value);
+            clearError('username');
+          }}
+          className="glass-input"
           {...invalidProps('username', errors.username)}
         />
       </FormField>
 
       <FormField id="password" label="Password" error={errors.password}>
-        <input
+        <PasswordInput
           ref={passwordRef}
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearError('password');
+          }}
           {...invalidProps('password', errors.password)}
         />
       </FormField>
@@ -134,7 +151,11 @@ export function RegisterForm() {
           name="gender"
           required
           value={gender}
-          onChange={(event) => setGender(event.target.value)}
+          onChange={(event) => {
+            setGender(event.target.value);
+            clearError('gender');
+          }}
+          className="glass-input glass-select"
           {...invalidProps('gender', errors.gender)}
         >
           <option value="" disabled>
@@ -149,17 +170,20 @@ export function RegisterForm() {
       </FormField>
 
       {formError && (
-        <p role="alert" className={styles.formError}>
+        <p role="alert" className="banner-error">
           {formError}
         </p>
       )}
 
-      <button type="submit" disabled={pending} className={styles.submit}>
-        {pending ? 'Creating account...' : 'Create account'}
-      </button>
+      <Button type="submit" disabled={pending} loading={pending} fullWidth>
+        {pending ? 'Creating Account...' : 'Create Account'}
+      </Button>
 
-      <p className={styles.footer}>
-        Already have an account? <Link href="/login">Sign in</Link>
+      <p className="caption text-center">
+        Already have an account?{' '}
+        <Link href="/login" className="link">
+          Sign in
+        </Link>
       </p>
     </form>
   );

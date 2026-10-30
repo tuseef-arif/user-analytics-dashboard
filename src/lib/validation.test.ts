@@ -42,28 +42,54 @@ describe('password', () => {
   });
 
   it.each([
-    [7, 'Password must be 8-128 characters.'],
+    [7, 'Password must be at least 8 characters.'],
     [8, undefined],
     [128, undefined],
-    [129, 'Password must be 8-128 characters.'],
+    [129, 'Password must be at most 128 characters.'],
   ])('length %i -> %s', (n, expected) => {
     expect(
-      validateRegister({ ...valid, password: 'x'.repeat(n) }).password,
+      validateRegister({ ...valid, password: 'a1!' + 'x'.repeat(n - 3) })
+        .password,
     ).toBe(expected);
   });
 
   it('is not trimmed: surrounding spaces count toward the length', () => {
-    expect(validateRegister({ ...valid, password: ' 123456 ' })).toEqual({});
-    expect(validateRegister({ ...valid, password: '        ' })).toEqual({});
+    expect(validateRegister({ ...valid, password: ' Pass1! ' })).toEqual({});
   });
 
   it('counts an emoji as one character, like the backend', () => {
-    expect(validateRegister({ ...valid, password: '😀'.repeat(128) })).toEqual(
-      {},
-    );
     expect(
-      validateRegister({ ...valid, password: '😀'.repeat(7) }).password,
-    ).toBe('Password must be 8-128 characters.');
+      validateRegister({ ...valid, password: 'a1' + '😀'.repeat(126) }),
+    ).toEqual({});
+    expect(
+      validateRegister({ ...valid, password: 'a1' + '😀'.repeat(5) }).password,
+    ).toBe('Password must be at least 8 characters.');
+  });
+
+  it.each([
+    ['12345678!', 'no letter'],
+    ['Password!', 'no number'],
+    ['Password1', 'no special character'],
+    ['Password 1', 'a space is not a special character'],
+    ['        ', 'only spaces'],
+  ])('rejects %j (%s)', (password) => {
+    expect(validateRegister({ ...valid, password }).password).toBe(
+      'Password must include a letter, a number and a special character.',
+    );
+  });
+
+  it.each([
+    ['Password123@', 'sample'],
+    ['pässwörd1_', 'non-ASCII letters'],
+    ['abc123😀xy', 'emoji as the special character'],
+  ])('accepts %j (%s)', (password) => {
+    expect(validateRegister({ ...valid, password })).toEqual({});
+  });
+
+  it('checks length before strength', () => {
+    expect(validateRegister({ ...valid, password: 'abc' }).password).toBe(
+      'Password must be at least 8 characters.',
+    );
   });
 });
 

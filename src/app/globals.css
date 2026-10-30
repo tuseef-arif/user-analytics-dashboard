@@ -1,18 +1,166 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@import 'tailwindcss';
+
+/* Design tokens: the only place colors are defined. Contrast pairs were checked against
+   the brightest spot a card can sit on: a yellow ribbon behind the orange card glow. */
+@theme {
+  --color-base: #050505;
+
+  --color-neon-violet: #a855f7;
+  --color-neon-magenta: #ec4899;
+  --color-neon-orange: #f97316;
+  --color-neon-yellow: #facc15;
+  --color-neon-lime: #a3e635;
+
+  --color-glass: #ffffff12;
+  --color-glass-border: #ffffff26;
+  --color-glass-fallback: #1a1a1aeb;
+  --color-surface: #18181b;
+  --color-control-border: #ffffff99;
+
+  --color-fg: #f8fafc;
+  --color-fg-muted: #ffffffcc;
+  --color-ink: #0a0a0a;
+
+  --color-accent: #fed7aa;
+  --color-heading-accent: #fb923c;
+
+  --color-danger: #fecaca;
+  --color-danger-tint: #f87171;
+  --color-success-tint: #4ade80;
+
+  --radius-card: 1.5rem;
+  --radius-control: 0.5rem;
+
+  --shadow-glass: 0 30px 60px -15px #000000cc, inset 0 1px 0 0 #ffffff1f;
+
+  --default-transition-duration: 180ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+
+  --animate-drift: drift 40s ease-in-out infinite alternate;
+  --animate-card-in: card-in 450ms var(--default-transition-timing-function)
+    both;
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+  }
+
+  @keyframes drift {
+    to {
+      transform: translate3d(3vw, -2vh, 0) rotate(2deg);
+    }
+  }
 }
 
-body {
-  margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
-  line-height: 1.5;
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-base text-fg min-h-screen text-base antialiased;
+  }
+}
+
+@layer components {
+  /* Smoky glass with two soft colour glows inside, like light caught in the pane. */
+  .glass {
+    @apply rounded-card border-glass-border bg-glass shadow-glass border backdrop-blur-xl;
+    background-image:
+      radial-gradient(
+        circle at 15% 110%,
+        color-mix(in srgb, var(--color-neon-magenta) 30%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--color-neon-orange) 22%, transparent),
+        transparent 50%
+      );
+  }
+
+  /* Without backdrop-filter the translucent surface would let the background wash out
+     text, so fall back to a nearly opaque one. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      @apply bg-glass-fallback;
+    }
+  }
+
+  /* The gradient is clipped to the element box, so descenders (g, p, y) need bottom
+     padding or they get cut off. */
+  .heading {
+    @apply from-fg via-fg to-heading-accent bg-linear-to-r bg-clip-text pb-1.5 text-3xl font-extrabold tracking-tight text-transparent;
+  }
+
+  .caption {
+    @apply text-fg-muted text-sm;
+  }
+
+  .glass-input {
+    @apply rounded-control border-control-border text-fg placeholder:text-fg-muted h-12 w-full border bg-white/4 px-4 text-base transition;
+    /* One border that turns white and bolder on focus instead of a second outline ring.
+       The extra pixel is an inset shadow so the field doesn't shift; outline-hidden
+       still shows a focus outline in forced-colors mode, where shadows are dropped. */
+    @apply focus:border-fg focus:inset-ring-fg focus:inset-ring focus:outline-hidden;
+    @apply aria-invalid:border-danger aria-invalid:focus:border-danger aria-invalid:focus:inset-ring-danger;
+    @apply disabled:cursor-not-allowed disabled:opacity-60;
+    @apply motion-reduce:transition-none;
+  }
+
+  /* appearance-none drops the native arrow; two gradients draw a chevron in
+     currentColor so no image asset is needed. */
+  .glass-select {
+    @apply appearance-none pr-10;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      right 1.25rem center,
+      right 0.875rem center;
+    background-size: 0.375rem 0.375rem;
+    background-repeat: no-repeat;
+  }
+
+  /* The open list is drawn by the OS, not over the glass, so it needs its own solid
+     dark surface; otherwise light text lands on a light native list. */
+  .glass-select option {
+    @apply bg-surface text-fg;
+  }
+
+  .glass-select option:disabled {
+    @apply text-fg-muted;
+  }
+
+  .link {
+    @apply text-accent rounded-sm font-medium underline-offset-4 hover:underline;
+    @apply focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2;
+  }
+
+  .banner-error {
+    @apply rounded-control border-danger-tint/50 bg-danger-tint/15 text-fg border p-3;
+  }
+
+  .banner-success {
+    @apply rounded-control border-success-tint/50 bg-success-tint/15 text-fg border p-3;
+  }
+
+  /* Decorative ring around the total: a conic gradient masked down to a band. */
+  .donut {
+    background: conic-gradient(
+      from 200deg,
+      var(--color-neon-violet),
+      var(--color-neon-magenta),
+      var(--color-neon-orange),
+      var(--color-neon-yellow),
+      var(--color-neon-violet)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 1.25rem),
+      black calc(100% - 1.25rem + 1px)
+    );
+  }
 }

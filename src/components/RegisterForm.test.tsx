@@ -38,7 +38,7 @@ function setup() {
     username: screen.getByLabelText('Username') as HTMLInputElement,
     password: screen.getByLabelText('Password') as HTMLInputElement,
     gender: screen.getByLabelText('Gender') as HTMLSelectElement,
-    submit: screen.getByRole('button', { name: 'Create account' }),
+    submit: screen.getByRole('button', { name: 'Create Account' }),
   };
 }
 
@@ -101,7 +101,9 @@ describe('rendering', () => {
 
   it('submits via POST so credentials never land in the URL before hydration', () => {
     setup();
-    const form = screen.getByRole('button').closest('form')!;
+    const form = screen
+      .getByRole('button', { name: 'Create Account' })
+      .closest('form')!;
     expect(form).toHaveAttribute('method', 'post');
     expect(form).toHaveAttribute('novalidate');
   });
@@ -137,6 +139,25 @@ describe('client-side validation', () => {
     expect(fields.username).not.toHaveAttribute('aria-invalid');
     expect(fields.password).toHaveFocus();
   });
+
+  it('clears a field error as soon as that field changes, leaving the others', async () => {
+    const { ue, username, password, gender, submit } = setup();
+    await ue.click(submit);
+
+    await ue.type(username, 'a');
+    expect(username).not.toHaveAttribute('aria-invalid');
+    expect(username).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText('Username is required.')).not.toBeInTheDocument();
+    expect(fieldError(password)).toHaveTextContent('Password is required.');
+
+    await ue.selectOptions(gender, 'female');
+    expect(gender).not.toHaveAttribute('aria-invalid');
+    expect(
+      screen.queryByText('Please select a gender.'),
+    ).not.toBeInTheDocument();
+    expect(password).toHaveAttribute('aria-invalid', 'true');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('submitting', () => {
@@ -165,7 +186,7 @@ describe('submitting', () => {
     await fields.ue.click(fields.submit);
 
     const pendingButton = screen.getByRole('button', {
-      name: 'Creating account...',
+      name: 'Creating Account...',
     });
     expect(pendingButton).toBeDisabled();
     await fields.ue.click(pendingButton);
@@ -192,6 +213,21 @@ describe('server errors', () => {
     );
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it('clears a server field error once the field is edited', async () => {
+    registerMock.mockRejectedValue(new ApiError(409, 'Username already taken'));
+    const fields = setup();
+    await fillValid(fields.ue, fields);
+    await fields.ue.click(fields.submit);
+    expect(fields.username).toHaveAttribute('aria-invalid', 'true');
+
+    await fields.ue.type(fields.username, 'x');
+
+    expect(fields.username).not.toHaveAttribute('aria-invalid');
+    expect(
+      screen.queryByText('Username already taken'),
+    ).not.toBeInTheDocument();
   });
 
   it('maps 422 fieldErrors onto the matching fields', async () => {
@@ -237,7 +273,7 @@ describe('server errors', () => {
       expect(fields.password).toHaveValue('Password123@');
       expect(fields.gender).toHaveValue('male');
       expect(
-        screen.getByRole('button', { name: 'Create account' }),
+        screen.getByRole('button', { name: 'Create Account' }),
       ).toBeEnabled();
     },
   );

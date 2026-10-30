@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 
+import { AuthCard } from '@/components/AuthCard';
 import { LoginForm } from '@/components/LoginForm';
-
-import styles from '../register/page.module.css';
 
 export const metadata: Metadata = {
   title: 'Sign in | Dashboard App',
@@ -17,9 +16,8 @@ export default async function LoginPage({
   const registered = params.registered === '1';
 
   return (
-    <main className={styles.main}>
-      <h1 className={styles.title}>Sign in</h1>
+    <AuthCard title="Sign in">
       <LoginForm registered={registered} />
-    </main>
+    </AuthCard>
   );
 }

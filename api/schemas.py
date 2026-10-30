@@ -20,6 +20,22 @@ def _check_username_chars(value: str) -> str:
     return value
 
 
+PASSWORD_STRENGTH_MESSAGE = (
+    "Password must include a letter, a number and a special character."
+)
+
+
+def _check_password_strength(value: str) -> str:
+    # Mirrors validateRegister in src/lib/validation.ts. Whitespace is allowed but
+    # doesn't count as the special character.
+    has_letter = any(c.isalpha() for c in value)
+    has_number = any(c in "0123456789" for c in value)
+    has_special = any(not c.isalnum() and not c.isspace() for c in value)
+    if not (has_letter and has_number and has_special):
+        raise ValueError(PASSWORD_STRENGTH_MESSAGE)
+    return value
+
+
 class RegisterIn(BaseModel):
     username: Annotated[
         str,
@@ -28,7 +44,11 @@ class RegisterIn(BaseModel):
         ),
         AfterValidator(_check_username_chars),
     ]
-    password: str = Field(min_length=8, max_length=128)
+    password: Annotated[
+        str,
+        Field(min_length=8, max_length=128),
+        AfterValidator(_check_password_strength),
+    ]
     gender: Gender
 
 
