@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -98,6 +104,21 @@ describe('registered notice', () => {
   it.each([{ registered: false }, {}])('hides it for %j', (props) => {
     setup(props);
     expect(screen.queryByText(NOTICE)).not.toBeInTheDocument();
+  });
+
+  it('disappears by itself after 5 seconds', () => {
+    vi.useFakeTimers();
+    try {
+      setup({ registered: true });
+
+      act(() => vi.advanceTimersByTime(4999));
+      expect(screen.getByRole('status')).toHaveTextContent(NOTICE);
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.queryByText(NOTICE)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('disappears after a failed submit', async () => {
@@ -200,6 +221,25 @@ describe('submitting', () => {
 });
 
 describe('server errors', () => {
+  it.each(['Username', 'Password'])(
+    'clears the form-level alert when typing in %s',
+    async (label) => {
+      loginMock.mockRejectedValue(
+        new ApiError(401, 'Invalid username or password'),
+      );
+      const fields = setup();
+      await fillValid(fields.ue, fields);
+      await fields.ue.click(fields.submit);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Invalid username or password',
+      );
+
+      await fields.ue.type(screen.getByLabelText(label), 'x');
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
+
   it('shows a 401 at form level, keeps the username and clears the password', async () => {
     loginMock.mockRejectedValue(
       new ApiError(401, 'Invalid username or password'),

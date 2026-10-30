@@ -2,9 +2,9 @@
 
 A dashboard app with user registration, login, logout and protected user statistics.
 
-**Live demo:** `https://<PROJECT_NAME>.vercel.app`
+**Live demo:** `https://user-analytics-dashboard-delta.vercel.app`
 
-**Repository:** `<GITHUB_REPO_URL>`
+**Repository:** `https://github.com/tuseef-arif/user-analytics-dashboard`
 
 ## Features
 
@@ -16,7 +16,7 @@ A dashboard app with user registration, login, logout and protected user statist
 
 This public demo account exists in the deployed database and is safe to publish. You can also register a new user.
 
-- **Username:** `testuser@email.com`
+- **Username:** `testuser`
 - **Password:** `Password123@`
 
 ## Tech stack
